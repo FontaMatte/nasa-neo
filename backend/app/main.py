@@ -1,16 +1,17 @@
 from fastapi import FastAPI, HTTPException
 from datetime import date
-from app.nasa_client import fetch_feed, parse_feed
+from app.nasa_client import fetch_feed, parse_feed, fetch_neo_detail
 from app.cache import cache
 from app.config import CACHE_TTL_SECONDS, MAX_RANGE_DAYS
 from app.chunking import build_chunks
-from app.exceptions import NasaRateLimitError, NasaUnavailableError, NasaError
+from app.exceptions import NasaNotFoundError, NasaRateLimitError, NasaUnavailableError, NasaError
 
 app = FastAPI(title="NASA NEO Dashboard API")
 
 @app.get("/")
 def health_check():
     return {"status": "ok"}
+
 
 @app.get("/api/neos")
 async def get_neos(start_date: date, end_date: date):
@@ -56,4 +57,27 @@ async def get_neos(start_date: date, end_date: date):
         "asteroids": asteroids,
     }
 
+
+@app.get("/api/neos/{neo_id}")
+async def get_neo_detail(neo_id: str):
+    cache_key = f"detail_{neo_id}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    
+    try:
+        detail = await fetch_neo_detail(neo_id)
+    except NasaRateLimitError:
+        raise HTTPException(status_code=429, detail="Limite di richieste superato. Riprova più tardi.")
+    except NasaUnavailableError:
+        raise HTTPException(status_code=503, detail="Servizio NASA non disponibile. Riprova più tardi.")
+    except NasaNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Asteroide con ID {neo_id} non trovato")
+    except NasaError:
+        raise HTTPException(status_code=502, detail="Errore nella risposta della NASA. Riprova più tardi.")
+    
+    cache.set(cache_key, detail, CACHE_TTL_SECONDS)
+
+    return detail
 

@@ -6,3 +6,6 @@ class NasaRateLimitError(NasaError):
 
 class NasaUnavailableError(NasaError):
     """La NASA è irraggiungibile (timeout, rete giù)."""
+
+class NasaNotFoundError(NasaError):
+    """L'asteroide richiesto non esiste (404)."""
