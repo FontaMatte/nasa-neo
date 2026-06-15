@@ -4,6 +4,7 @@ from app.nasa_client import fetch_feed, parse_feed
 from app.cache import cache
 from app.config import CACHE_TTL_SECONDS, MAX_RANGE_DAYS
 from app.chunking import build_chunks
+from app.exceptions import NasaRateLimitError, NasaUnavailableError, NasaError
 
 app = FastAPI(title="NASA NEO Dashboard API")
 
@@ -34,7 +35,15 @@ async def get_neos(start_date: date, end_date: date):
             chunk_asteroids = cached
             chunks_from_cache += 1
         else:
-            raw = await fetch_feed(chunk_start.isoformat(), chunk_end.isoformat())
+            try:
+                raw = await fetch_feed(chunk_start.isoformat(), chunk_end.isoformat())
+            except NasaRateLimitError:
+                raise HTTPException(status_code=429, detail="Limite di richieste superato. Riprova più tardi.")
+            except NasaUnavailableError:
+                raise HTTPException(status_code=503, detail="Servizio NASA non disponibile. Riprova più tardi.")
+            except NasaError:
+                raise HTTPException(status_code=502, detail="Errore nella risposta della NASA. Riprova più tardi.")
+            
             chunk_asteroids = parse_feed(raw)
             cache.set(chunk_key, chunk_asteroids, CACHE_TTL_SECONDS)
 

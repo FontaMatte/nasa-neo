@@ -1,6 +1,7 @@
 import httpx
 
 from app.config import NASA_API_KEY, NASA_BASE_URL
+from app.exceptions import NasaRateLimitError, NasaUnavailableError, NasaError
 
 async def fetch_feed(start_date: str, end_date: str) -> dict:
 
@@ -9,10 +10,18 @@ async def fetch_feed(start_date: str, end_date: str) -> dict:
         "end_date": end_date,
         "api_key": NASA_API_KEY,
     }
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.get(f"{NASA_BASE_URL}/feed", params=params)
-        response.raise_for_status()
-        return response.json()
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{NASA_BASE_URL}/feed", params=params)
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 429:
+            raise NasaRateLimitError("Limite di richieste API superato") from e
+        raise NasaError(f"Errore nella richiesta API: {e.response.status_code}")
+    except httpx.RequestError as e:
+        raise NasaUnavailableError("Impossibile raggiungere l'API di NASA") from e
     
 
 def parse_feed(raw: dict) -> list:
