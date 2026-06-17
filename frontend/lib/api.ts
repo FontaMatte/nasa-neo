@@ -16,3 +16,16 @@ export async function fetchNeos(
 
     return response.json();
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function fetchNeoDetail(id: string): Promise<any> {
+    const url = `${API_BASE}/api/neos/${id}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Errore nel caricamento dei dettagli dell'asteroide");
+    }
+
+    return response.json();
+}

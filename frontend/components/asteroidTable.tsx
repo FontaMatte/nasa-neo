@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import Link from "next/link";
 
 interface AsteroidTableProps {
   asteroids: Asteroid[];
@@ -29,7 +30,11 @@ export function AsteroidTable({ asteroids }: AsteroidTableProps) {
       <TableBody>
         {asteroids.map((a) => (
           <TableRow key={a.id}>
-            <TableCell className="font-medium">{a.name}</TableCell>
+            <TableCell className="font-medium">
+              <Link href={`/asteroid/${a.id}`} className="text-primary underline">
+                {a.name}
+              </Link>
+            </TableCell>
             <TableCell>{a.date}</TableCell>
             <TableCell>
               {a.diameter_min_m.toLocaleString()} – {a.diameter_max_m.toLocaleString()}
