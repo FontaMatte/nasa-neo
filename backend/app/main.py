@@ -5,8 +5,16 @@ from app.cache import cache
 from app.config import CACHE_TTL_SECONDS, MAX_RANGE_DAYS
 from app.chunking import build_chunks
 from app.exceptions import NasaNotFoundError, NasaRateLimitError, NasaUnavailableError, NasaError
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="NASA NEO Dashboard API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 @app.get("/")
 def health_check():
