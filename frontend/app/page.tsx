@@ -5,6 +5,8 @@ import { fetchNeos } from "@/lib/api";
 import { Asteroid } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { AsteroidTable } from "@/components/asteroidTable";
+import { DistanceChart } from "@/components/DistanceChart";
+import { SizeChart } from "@/components/SizeChart";
 
 export default function Home() {
 	const [asteroids, setAsteroids] = useState<Asteroid[]>([]);
@@ -97,6 +99,20 @@ export default function Home() {
 					</select>
 				</div>
 			</div>
+
+			{visibleAsteroids.length > 0 && (
+				<div className="my-8">
+					<h2 className="text-xl font-semibold mb-4">Distanza dalla Terra</h2>
+					<DistanceChart asteroids={visibleAsteroids} />
+				</div>
+			)}
+
+			{visibleAsteroids.length > 0 && (
+				<div className="my-8">
+					<h2 className="text-xl font-semibold mb-4">Distribuzione per dimensione</h2>
+					<SizeChart asteroids={visibleAsteroids} />
+				</div>
+			)}
 
 			{visibleAsteroids.length > 0 && <AsteroidTable asteroids={visibleAsteroids} />}
 		</main>
