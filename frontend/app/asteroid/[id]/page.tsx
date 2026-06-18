@@ -32,7 +32,13 @@ export default function AsteroidDetail() {
   }, [id]);
 
   if (loading) return <main className="container mx-auto p-8">Caricamento...</main>;
-  if (error) return <main className="container mx-auto p-8 text-red-500">{error}</main>;
+  if (error) return (
+	<main className="container mx-auto p-8">
+		<div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-red-700">
+			{error}
+		</div>
+	</main>
+  );
   if (!detail) return null;
 
   return (

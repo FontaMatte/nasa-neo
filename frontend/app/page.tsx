@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchNeos } from "@/lib/api";
 import { Asteroid } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { AsteroidTable } from "@/components/asteroidTable";
 import { DistanceChart } from "@/components/DistanceChart";
 import { SizeChart } from "@/components/SizeChart";
+import { TableSkeleton} from "@/components/TableSkeleton";
 
 export default function Home() {
 	const [asteroids, setAsteroids] = useState<Asteroid[]>([]);
@@ -42,6 +43,24 @@ export default function Home() {
 			return a.date.localeCompare(b.date); // "date"
 		})
 
+	
+	useEffect(() => {
+		async function loadInitial() {
+			setLoading(true);
+			setError(null);
+			try {
+			const data = await fetchNeos(startDate, endDate);
+			setAsteroids(data.asteroids);
+			} catch (e) {
+			setError(e instanceof Error ? e.message : "Errore sconosciuto");
+			} finally {
+			setLoading(false);
+			}
+		}
+		loadInitial();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
   	return (
 		<main className="container mx-auto p-8">
 			<h1 className="text-3xl font-bold mb-6">NASA NEO Dashboard</h1>
@@ -71,7 +90,11 @@ export default function Home() {
 				{loading ? "Caricamento..." : "Carica asteroidi"}
 			</Button>
 
-			{error && <p className="text-red-500 mt-4">{error}</p>}
+			{error && (
+				<div className="mt-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-red-700">
+					{error}
+				</div>
+			)}
 
 			<div className="flex gap-4 my-6">
 				<div>
@@ -100,21 +123,36 @@ export default function Home() {
 				</div>
 			</div>
 
-			{visibleAsteroids.length > 0 && (
-				<div className="my-8">
-					<h2 className="text-xl font-semibold mb-4">Distanza dalla Terra</h2>
-					<DistanceChart asteroids={visibleAsteroids} />
-				</div>
-			)}
+			{loading ? (
+			<TableSkeleton />
+			) : (
+				<>
+					{visibleAsteroids.length > 0 && (
+					<div className="my-8">
+						<h2 className="text-xl font-semibold mb-4">Distanza dalla Terra</h2>
+						<DistanceChart asteroids={visibleAsteroids} />
+					</div>
+					)}
+					{visibleAsteroids.length > 0 && (
+					<div className="my-8">
+						<h2 className="text-xl font-semibold mb-4">Distribuzione per dimensione</h2>
+						<SizeChart asteroids={visibleAsteroids} />
+					</div>
+					)}
+					{visibleAsteroids.length > 0 && <AsteroidTable asteroids={visibleAsteroids} />}
 
-			{visibleAsteroids.length > 0 && (
-				<div className="my-8">
-					<h2 className="text-xl font-semibold mb-4">Distribuzione per dimensione</h2>
-					<SizeChart asteroids={visibleAsteroids} />
-				</div>
+					{asteroids.length > 0 && visibleAsteroids.length === 0 && (
+					<p className="text-muted-foreground my-8">
+						Nessun asteroide corrisponde ai filtri selezionati.
+					</p>
+					)}
+					{!error && asteroids.length === 0 && (
+					<p className="text-muted-foreground my-8">
+						Nessun asteroide nel periodo selezionato. Prova un altro intervallo di date.
+					</p>
+					)}
+				</>
 			)}
-
-			{visibleAsteroids.length > 0 && <AsteroidTable asteroids={visibleAsteroids} />}
 		</main>
   	);
 }
