@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from datetime import date
 from app.nasa_client import fetch_feed, parse_feed, fetch_neo_detail
 from app.cache import cache
-from app.config import CACHE_TTL_SECONDS, MAX_RANGE_DAYS
+from app.config import CACHE_TTL_SECONDS, MAX_RANGE_DAYS, FRONTEND_URL
 from app.chunking import build_chunks
 from app.exceptions import NasaNotFoundError, NasaRateLimitError, NasaUnavailableError, NasaError
 from fastapi.middleware.cors import CORSMiddleware
